@@ -2,12 +2,15 @@ package explorer
 
 import (
 	"fmt"
+	"os"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
-	namespaceLabel = "Namespace"
+	namespaceLabel        = "Namespace"
+	startNewTerminal      = "Terminal"
+	startMidightCommander = "Midnight Commander"
 )
 
 type ClusterExplorer struct {
@@ -28,6 +31,17 @@ func (n *ClusterExplorer) List() error {
 		n.Items = append(n.Items, m)
 	}
 	n.Items = AddExit(n.Items)
+
+	n.Items = append(n.Items, &MenuItem{
+		kind: startNewTerminal,
+		name: "Start a new detached console",
+	})
+
+	n.Items = append(n.Items, &MenuItem{
+		kind: startMidightCommander,
+		name: "Start Midnight Commander for directory operations",
+	})
+
 	// TODO add CRDs
 	return nil
 }
@@ -42,6 +56,16 @@ func (n *ClusterExplorer) RunPrompt() (string, error) {
 	return selection, nil
 }
 
+var attr = os.ProcAttr{
+	Dir: "/bin",
+	Env: os.Environ(),
+	Files: []*os.File{
+		os.Stdin,
+		os.Stdout,
+		os.Stderr,
+	},
+}
+
 func (n *ClusterExplorer) Execute(selection string) error {
 	item := NewMenuItemFromReadable(selection)
 	switch item.GetKind() {
@@ -52,6 +76,12 @@ func (n *ClusterExplorer) Execute(selection string) error {
 			PreviousExplorer:   n,
 		}
 		return Explore(namespaceExplorer)
+	case startMidightCommander:
+		Exec("/usr/bin/mc", []string{""})
+		return Explore(n)
+	case startNewTerminal:
+		os.StartProcess("/usr/bin/xterm", []string{""}, &attr)
+		return Explore(n)
 	case exitLabel:
 		return Exit()
 	default:

@@ -22,6 +22,10 @@ func (n *DeploymentExplorer) List() error {
 	m.SetKind(podsLabel)
 	m.SetName("Get Pods")
 	n.Items = append(n.Items, m)
+	o := &MenuItem{}
+	o.SetKind(servicesLabel)
+	o.SetName("Get Services")
+	n.Items = append(n.Items, o)
 	n.Items = AddGoBack(n.Items)
 	n.Items = AddExit(n.Items)
 	return nil
@@ -51,6 +55,17 @@ func (n *DeploymentExplorer) Execute(selection string) error {
 			PreviousResourceName: n.DeploymentToExplore,
 		}
 		return Explore(podsExplorer)
+	case servicesLabel:
+		servicesExplorer := &ServicesExplorer{
+			PreviousItem: item,
+			Filters: map[string]string{
+				"k8s-app": n.DeploymentToExplore,
+			},
+			NamespaceToExplore:   n.NamespaceToExplore,
+			PreviousExplorer:     n,
+			PreviousResourceName: n.DeploymentToExplore,
+		}
+		return Explore(servicesExplorer)
 	case editLabel:
 		Exec("kubectl", []string{"edit", "deployment", n.DeploymentToExplore, "-n", n.NamespaceToExplore})
 		return Explore(n)
@@ -58,11 +73,11 @@ func (n *DeploymentExplorer) Execute(selection string) error {
 		if strings.Contains(item.GetName(), "../") {
 			return Explore(n.PreviousExplorer)
 		}
-		return fmt.Errorf("unknown action selection: %s", selection)
+		return fmt.Errorf("unknown action selection: %s, in explore_deployment.go", selection)
 	case exitLabel:
 		return Exit()
 	default:
-		return fmt.Errorf("unable to parse selection: %s", selection)
+		return fmt.Errorf("unable to parse selection: %s, in explore_deployment.go", selection)
 	}
 }
 

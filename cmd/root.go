@@ -18,9 +18,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kris-nova/krex/explorer"
 	"github.com/kubicorn/kubicorn/pkg/local"
 	"github.com/kubicorn/kubicorn/pkg/logger"
+	"github.com/marcpascal/krex/explorer"
 	"github.com/spf13/cobra"
 )
 

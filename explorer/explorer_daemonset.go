@@ -6,7 +6,8 @@ import (
 )
 
 const (
-	podsLabel = "Pods"
+	podsLabel     = "Pods"
+	servicesLabel = "Services"
 )
 
 type DaemonSetExplorer struct {
@@ -53,6 +54,17 @@ func (n *DaemonSetExplorer) Execute(selection string) error {
 			PreviousResourceName: n.DaemonSetToExplore,
 		}
 		return Explore(podsExplorer)
+	case servicesLabel:
+		servicesExplorer := &ServicesExplorer{
+			PreviousItem: item,
+			Filters: map[string]string{
+				"k8s-app": n.DaemonSetToExplore,
+			},
+			NamespaceToExplore:   n.NamespaceToExplore,
+			PreviousExplorer:     n,
+			PreviousResourceName: n.DaemonSetToExplore,
+		}
+		return Explore(servicesExplorer)
 	case editLabel:
 		Exec("kubectl", []string{"edit", "daemonset", n.DaemonSetToExplore, "-n", n.NamespaceToExplore})
 		return Explore(n)
@@ -64,7 +76,7 @@ func (n *DaemonSetExplorer) Execute(selection string) error {
 	case exitLabel:
 		return Exit()
 	default:
-		return fmt.Errorf("unable to parse selection: %s", selection)
+		return fmt.Errorf("unable to parse selection: %s, in explorer_daemonset.go", selection)
 	}
 }
 

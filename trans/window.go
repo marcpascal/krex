@@ -91,11 +91,8 @@ func (tw *TransWindow) Prompt(title string, items []string) string {
 	tw.stdscr.Clear()
 	tw.stdscr.Refresh()
 
-	tw.stdscr.Printf("Krex version [%s]", Version)
-	tw.stdscr.Printf("\n")
-	tw.stdscr.Printf("Kubernetes Resource Explore by Kris Nova <kris@fabulous.af>")
-	tw.stdscr.Printf("\n")
-	tw.stdscr.Printf("Exit character [q]")
+	tw.stdscr.Printf("Krex version [%s] -- Kubernetes Resource Explore by Kris Nova <kris@fabulous.af>\n", Version)
+	tw.stdscr.Printf("Use navigation arrows, backspace, [q] to exit\n")
 
 	// Draw the inital window
 	draw(tw.window, items, active)
@@ -119,13 +116,15 @@ func (tw *TransWindow) Prompt(title string, items []string) string {
 			} else {
 				active += 1
 			}
-		case KEY_RETURN, KEY_ENTER, Key('\r'):
+		case KEY_RETURN, KEY_ENTER, Key('\r'), KEY_RIGHT:
 			tw.stdscr.MovePrint(tw.my-2, 0, "Choice #%d: %s selected",
 				active,
 				items[active])
 			tw.stdscr.Refresh()
 			tw.stdscr.Clear()
 			return items[active]
+		case KEY_LEFT, KEY_BACKSPACE:
+			return "[Action] Go back ../"
 		default:
 			// Todo
 			tw.stdscr.MovePrint(tw.my-2, 0, "Character pressed = %3d/%c",

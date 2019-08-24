@@ -2,6 +2,8 @@ package explorer
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
 	"strings"
 )
 
@@ -69,17 +71,34 @@ func (n *PodExplorer) Execute(selection string) error {
 	item := NewMenuItemFromReadable(selection)
 	switch item.GetKind() {
 	case logAndDescribeLabel:
-		Exec("kubectl", []string{"describe", "pod", "--namespace", n.NamespaceToExplore, n.PodToExplore})
-		Exec("kubectl", []string{"logs", n.PodToExplore, "-n", n.NamespaceToExplore, "-f"})
+		cmd1 := exec.Command("/usr/bin/xterm", "-geometry", "80x40", "-hold", "-e", "/usr/bin/kubectl describe pod --namespace  "+n.NamespaceToExplore+" "+n.PodToExplore)
+		cmd1.Stdin = os.Stdin
+		cmd1.Stdout = os.Stdout
+		cmd1.Stderr = os.Stderr
+		cmd1.Start()
+
+		cmd2 := exec.Command("/usr/bin/xterm", "-geometry", "80x40", "-hold", "-e", "/usr/bin/kubectl logs "+n.PodToExplore+" -n "+n.NamespaceToExplore+" -f")
+		cmd2.Stdin = os.Stdin
+		cmd2.Stdout = os.Stdout
+		cmd2.Stderr = os.Stderr
+		cmd2.Start()
 		return Explore(n)
 	case describeLabel:
-		Exec("kubectl", []string{"describe", "pod", "--namespace", n.NamespaceToExplore, n.PodToExplore})
+		cmd := exec.Command("/usr/bin/xterm", "-geometry", "80x40", "-hold", "-e", "/usr/bin/kubectl describe pod --namespace  "+n.NamespaceToExplore+" "+n.PodToExplore)
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Start()
 		return Explore(n)
 	case execLabel:
 		Exec("kubectl", []string{"exec", "-it", "--namespace", n.NamespaceToExplore, n.PodToExplore, "sh"})
 		return Explore(n)
 	case logsLabel:
-		Exec("kubectl", []string{"logs", n.PodToExplore, "-n", n.NamespaceToExplore, "-f"})
+		cmd2 := exec.Command("/usr/bin/xterm", "-geometry", "80x40", "-hold", "-e", "/usr/bin/kubectl logs "+n.PodToExplore+" -n "+n.NamespaceToExplore+" -f")
+		cmd2.Stdin = os.Stdin
+		cmd2.Stdout = os.Stdout
+		cmd2.Stderr = os.Stderr
+		cmd2.Start()
 		return Explore(n)
 	case editLabel:
 		Exec("kubectl", []string{"edit", "pods", n.PodToExplore, "-n", n.NamespaceToExplore})

@@ -5,13 +5,14 @@ import (
 
 	"strings"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
 	statefulSetLabel = "StatefulSet"
 	deploymentLabel  = "Deployment"
 	daemonSetLabel   = "DaemonSet"
+	replicasetLabel  = "Replicaset"
 	debugLabel       = "Debug"
 	actionLabel      = "Action"
 )
@@ -63,6 +64,18 @@ func (n *NamespaceExplorer) List() error {
 		n.Items = append(n.Items, m)
 	}
 
+	// Replicaset
+	dreplicatset, err := k8sclient.AppsV1().ReplicaSets(n.NamespaceToExplore).List(v1.ListOptions{})
+	if err != nil {
+		return err
+	}
+	for _, item := range dreplicatset.Items {
+		m := &MenuItem{}
+		m.SetName(item.Name)
+		m.SetKind(replicasetLabel)
+		n.Items = append(n.Items, m)
+	}
+
 	m := &MenuItem{}
 	m.SetKind(debugLabel)
 	m.SetName(fmt.Sprintf("Run a debugging pod in the Namespace and shell exec [%s]", options.ShellExecImage))
@@ -111,9 +124,11 @@ func (n *NamespaceExplorer) Execute(selection string) error {
 		return Explore(statefulSetExplorer)
 	case actionLabel:
 		if strings.Contains(item.GetName(), "../") {
-			return Explore(n.PreviousExplorer)
+			if n.PreviousExplorer != nil {
+				return Explore(n.PreviousExplorer)
+			}
 		}
-		return fmt.Errorf("unknown action selection: %s", selection)
+		return fmt.Errorf("Invalid action: %s", selection)
 	case debugLabel:
 		// Deploy a pod and exec into it
 		Exec("kubectl", []string{"run", "-n", n.NamespaceToExplore, "-i", "--tty", "krex-debug-pod", "--image", options.ShellExecImage, "--", "sh"})

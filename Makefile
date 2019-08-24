@@ -3,7 +3,7 @@
 version  := $(shell git rev-parse --short HEAD)
 
 name     := krex
-package  := github.com/kris-nova/$(name)
+package  := github.com/marcpascal/$(name)
 packages := $(shell go list ./... | grep -v /vendor/)
 
 .PHONY: all

@@ -37,13 +37,56 @@ Export the `PKG_CONFIG_PATH` variable
 export PKG_CONFIG_PATH=/usr/local/opt/ncurses/lib/pkgconfig
 ```
 
-Then use symbolic links to adjust the library for `pkg-config`. (Note:
+### Ubuntu
+
+Installing ncurses library in Debian/Ubuntu Linux
+
+It should be already installed starting from `Ubuntu 18.04.2 LTS`, we are going to verify and install eventually.
+
+Verify the libraries are installed
+
+``` bash
+/sbin/ldconfig -p | grep -i curses`
+``` 
+It should return something like:
+
+``` bash
+libncursesw.so.5 (libc6,x86-64) => /lib/x86_64-linux-gnu/libncursesw.so.5
+libncurses.so.5 (libc6,x86-64) => /lib/x86_64-linux-gnu/libncurses.so.5
+```
+
+If not, let's install the following two packages: `libncurses5-dev` and `libncursesw5-dev`
+
+``` bash
+# Open a Terminal.
+sudo apt-get update
+sudo apt-get install libncurses5-dev libncursesw5-dev
+```
+
+Export the `PKG_CONFIG_PATH` variable
+
+``` bash
+export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig
+```
+
+### Continue the installation
+
+Use symbolic links to adjust the library for `pkg-config`. (Note:
 more information can be found [here].
 
 ``` bash
-ln -s /usr/local/opt/ncurses/lib/pkgconfig/formw.pc /usr/local/opt/ncurses/lib/pkgconfig/form.pc
-ln -s /usr/local/opt/ncurses/lib/pkgconfig/menuw.pc /usr/local/opt/ncurses/lib/pkgconfig/menu.pc
-ln -s /usr/local/opt/ncurses/lib/pkgconfig/panelw.pc /usr/local/opt/ncurses/lib/pkgconfig/panel.pc
+# Create the symbolic links for the missing files.
+# It can be different between Mac and Ubuntu so a conditionnal execution is added here
+# in case the link or file already exist.
+if [ ! -f $PKG_CONFIG_PATH/form.pc -a ! -L $PKG_CONFIG_PATH/form.pc ]  ; then 
+  ln -s /usr/lib/x86_64-linux-gnu/pkgconfig/formw.pc /usr/lib/x86_64-linux-gnu/pkgconfig/form.pc
+fi
+if [ ! -f $PKG_CONFIG_PATH/menu.pc -a ! -L $PKG_CONFIG_PATH/menu.pc ]  ; then
+  ln -s /usr/lib/x86_64-linux-gnu/pkgconfig/menuw.pc /usr/lib/x86_64-linux-gnu/pkgconfig/menu.pc
+fi
+if [ ! -f $PKG_CONFIG_PATH/panel.pc -a ! -L $PKG_CONFIG_PATH/panel.pc ]  ; then
+  ln -s /usr/lib/x86_64-linux-gnu/pkgconfig/panelw.pc /usr/lib/x86_64-linux-gnu/pkgconfig/panel.pc
+fi
 ```
 
 Then build the binary
