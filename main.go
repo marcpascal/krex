@@ -14,7 +14,7 @@
 
 package main
 
-import "github.com/kris-nova/krex/cmd"
+import "github.com/marcpascal/krex/cmd"
 
 func main() {
 	cmd.Execute()

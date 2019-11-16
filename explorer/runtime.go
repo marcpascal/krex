@@ -21,7 +21,7 @@ import (
 	// Import to initialize client auth plugins.
 	"fmt"
 
-	"github.com/kris-nova/krex/trans"
+	"github.com/marcpascal/krex/trans"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 

@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/kris-nova/krex/trans"
+	"github.com/marcpascal/krex/trans"
 )
 
 func main() {
