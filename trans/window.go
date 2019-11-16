@@ -81,7 +81,13 @@ func (tw *TransWindow) Prompt(title string, items []string) string {
 
 	// Init the prompt
 	defer End()
+
+	// Current cursor position in the list
 	var active int
+
+	// Virtual window definition
+	var wLines int        // Nb lines displayed in the window
+	var xPosition int = 0 // Left top corner of the virtual window
 
 	// Clear the window
 	tw.window.Clear()
@@ -92,10 +98,12 @@ func (tw *TransWindow) Prompt(title string, items []string) string {
 	tw.stdscr.Refresh()
 
 	tw.stdscr.Printf("Krex version [%s] -- Kubernetes Resource Explore by Kris Nova <kris@fabulous.af>\n", Version)
-	tw.stdscr.Printf("Use navigation arrows, backspace, [q] to exit\n")
+	tw.stdscr.Printf("Use navigation arrows, pgup, pgdwn, home, end, backspace, [q] to exit\n")
+
+	wLines = min(20, len(items)) // Set the number of displayed lines tp 20 max.
 
 	// Draw the inital window
-	draw(tw.window, items, active)
+	draw(tw.window, items, active, xPosition, wLines)
 
 	// Event loop
 	for {
@@ -104,17 +112,27 @@ func (tw *TransWindow) Prompt(title string, items []string) string {
 		case 'q':
 			//tw.stdscr.Clear()
 			return ""
+		case KEY_HOME:
+			xPosition = 0
+			active = 0
+		case KEY_END:
+			xPosition = len(items) - wLines
+			active = xPosition
+		case KEY_PAGEUP:
+			xPosition = max(xPosition-wLines, 0)
+			active = xPosition
+		case KEY_PAGEDOWN:
+			xPosition = min(xPosition+(2*wLines)-1, len(items)) - wLines
+			active = xPosition
 		case KEY_UP:
-			if active == 0 {
-				active = len(items) - 1
-			} else {
-				active -= 1
+			active = max(active-1, 0)
+			if active < xPosition {
+				xPosition = active
 			}
 		case KEY_DOWN:
-			if active == len(items)-1 {
-				active = 0
-			} else {
-				active += 1
+			active = min(active+1, len(items)-1)
+			if active >= xPosition+wLines {
+				xPosition++
 			}
 		case KEY_RETURN, KEY_ENTER, Key('\r'), KEY_RIGHT:
 			tw.stdscr.MovePrint(tw.my-2, 0, "Choice #%d: %s selected",
@@ -132,7 +150,7 @@ func (tw *TransWindow) Prompt(title string, items []string) string {
 			tw.stdscr.ClearToEOL()
 			tw.stdscr.Refresh()
 		}
-		draw(tw.window, items, active)
+		draw(tw.window, items, active, xPosition, wLines)
 	}
 }
 
@@ -140,19 +158,38 @@ func (tw *TransWindow) End() {
 	End()
 }
 
-func draw(w *Window, menu []string, active int) {
-
+func draw(w *Window, items []string, active int, xPosition int, wLines int) {
+	var clear string = "                                                                               "
 	y, x := 2, 2
 	w.Box(0, 0)
-	//w.Background()
-	for i, s := range menu {
-		if i == active {
-			w.AttrOn(A_REVERSE)
-			w.MovePrint(y+i, x, s)
-			w.AttrOff(A_REVERSE)
-		} else {
-			w.MovePrint(y+i, x, s)
+	//w.Background() //??
+	for i, s := range items {
+		if i >= xPosition && i < (xPosition+wLines) {
+			w.MovePrint(y+i-xPosition, x, clear)
+			if i == active {
+				w.AttrOn(A_REVERSE)
+				w.MovePrint(y+i-xPosition, x, s)
+				w.AttrOff(A_REVERSE)
+			} else {
+				w.MovePrint(y+i-xPosition, x, s)
+			}
 		}
 	}
 	w.Refresh()
+}
+
+// Return the min value from 2 integers
+func min(x int, y int) int {
+	if x <= y {
+		return x
+	}
+	return y
+}
+
+// Return the max value from 2 integers
+func max(x int, y int) int {
+	if x >= y {
+		return x
+	}
+	return y
 }
